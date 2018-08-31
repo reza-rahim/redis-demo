@@ -3,8 +3,6 @@ var router = express.Router();
 var csrf = require('csurf');
 var passport = require('passport');
 
-var Order = require ('../models/order');
-var Cart = require ('../models/cart');
 
 var csrfProtection = csrf();
 router.use(csrfProtection);
@@ -21,6 +19,7 @@ router.get('/profile', isLoggedIn, function (req, res, next) {
             order.items = cart.generateArray();
         });
 */
+        var cart = {}
         orders = {}
         res.render('user/profile', { orders: orders });
  //   });
