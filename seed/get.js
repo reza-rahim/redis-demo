@@ -2,7 +2,9 @@ var redis = require('redis');
 var chunk = require('chunk');
 var redisClient = redis.createClient({host : 'localhost', port : 6379});
 const {promisify} = require('util');
-const getAsync = promisiofy(redisClient.get).bind(redisClient);
+const getAsync = promisify(redisClient.get).bind(redisClient);
+const hgetallAsync = promisify(redisClient.hgetall).bind(redisClient);
+const smembersAsync = promisify(redisClient.smembers).bind(redisClient);
 
 
 const hgetallAsync = promisify(redisClient.hgetall).bind(redisClient);
@@ -15,7 +17,28 @@ redisClient.hgetall("redisshop:product:vans",function (err, reply){
                       console.log(reply.imagePath)
                     }); 
 
+//--------------
 
+var user="reza@redislabs.com"
+var orders = {}
+var ordersView = []
+
+var carts = {}
+var cartsView = []
+
+smembersAsync('all-order:'+user).then(function (result) { orders=result });
+
+orders.forEach(function(order){ 
+   hgetallAsync('order:'+user+':'+order).then(function (result) { ordersView.push(result) });
+   smembersAsync('all-cart:'+user+':'+order).then(function (result) { carts=result });
+   carts.forEach(function(cart){
+      hgetallAsync('cart:'+user+':'+order+':'+cart).then(function (result) { cartsView.push(result) });
+   })
+})
+
+
+
+//---------------
 
 redisClient.hgetallAsync('redisshop:product:vans').then(function (result) { console.log(result); });
 
