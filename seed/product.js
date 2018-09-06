@@ -53,6 +53,7 @@ products.forEach(function(value){
   redisClient.hmset("redisshop:product:"+value.key, "id", value.key, "imagePath", value.imagePath,
                      "title", value.title, "description", value.description, "price", value.price)
   redisClient.sadd("redisshop:all-products", value.key)
+  redisClient.zadd("redisshop:all-productsSorted", value.price,value.key)
   redisClient.exec(function (err, replies) {
     //nsole.log(replies); 
   });

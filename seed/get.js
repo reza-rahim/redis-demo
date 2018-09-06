@@ -7,8 +7,6 @@ const hgetallAsync = promisify(redisClient.hgetall).bind(redisClient);
 const smembersAsync = promisify(redisClient.smembers).bind(redisClient);
 
 
-const hgetallAsync = promisify(redisClient.hgetall).bind(redisClient);
-
 var rk          = require('rk'), 
     keyRoot     = 'redishop', 
     product       = rk(keyRoot,'product','*');
@@ -20,19 +18,19 @@ redisClient.hgetall("redisshop:product:vans",function (err, reply){
 //--------------
 
 var user="reza@redislabs.com"
-var orders = {}
+var orders = []
 var ordersView = []
 
-var carts = {}
+var carts = []
 var cartsView = []
 
-smembersAsync('all-order:'+user).then(function (result) { orders=result });
+smembersAsync('all-orders:'+user).then(function (result) { orders=result });
 
 orders.forEach(function(order){ 
-   hgetallAsync('order:'+user+':'+order).then(function (result) { ordersView.push(result) });
-   smembersAsync('all-cart:'+user+':'+order).then(function (result) { carts=result });
+   hgetallAsync('orders:'+user+':'+order).then(function (result) { ordersView.push(result) });
+   smembersAsync('all-carts:'+user+':'+order).then(function (result) { carts=result });
    carts.forEach(function(cart){
-      hgetallAsync('cart:'+user+':'+order+':'+cart).then(function (result) { cartsView.push(result) });
+      hgetallAsync('carts:'+user+':'+order+':'+cart).then(function (result) { cartsView.push(result) });
    })
 })
 
