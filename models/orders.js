@@ -1,7 +1,7 @@
 var Redis = require('../models/redis');
 var HashMap = require('hashmap');
 
-function createOrders(orderPayLoad) {
+async function createOrders(orderPayLoad) {
     let redisClient = Redis.redisClient
     var mul =redisClient.multi()
 
@@ -22,8 +22,8 @@ function createOrders(orderPayLoad) {
 
     })
 
-    mul.exec(function (err, replies) {
-    });
+    let reply = await mul.execAsync(); 
+    return reply;
 
 }
 
