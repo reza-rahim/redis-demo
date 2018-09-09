@@ -4,14 +4,25 @@ var router = express.Router();
 var chunk = require('chunk');
 var Redis = require('../models/redis');
 var Products = require('../models/product');
+var Cart = require ('../models/cart');
 var moment = require('moment');
 var redisClient = Redis.redisClient
+var Product = require('../models/product');
 
 /* From the redis data base -- */
-router.get('/', function(req, res, next) {
+//router.get('/', function(req, res, next) {
+router.get('/', async (req, res, next) => {
     var successMgs = req.flash('success')[0];
      
-/*---------------*/
+    products = await Product.getProducts()
+    var productChunks = [];
+    var chunkSize = 3;
+    for (var i = 0; i < products.length; i += chunkSize) {
+          productChunks.push(products.slice(i, i  + chunkSize));
+    }
+    res.render('shop/index', { title: 'Shopping cart', products: productChunks, successMgs: successMgs, noMessage: !successMgs });
+    
+/*---------------
      // with multi exec 
      redisClient.zrevrange('redisshop:all-productsSorted',0,10, function(err, products) {
         var mul = redisClient.multi();
@@ -39,7 +50,7 @@ router.get('/', function(req, res, next) {
            res.render('shop/index', { title: 'Shopping cart', products: productChunks, successMgs: successMgs, noMessage: !successMgs });
         });
      });
-/*------------- */
+------------- */
 
 /* ---------------
      //with sort command

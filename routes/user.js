@@ -7,10 +7,10 @@ var Cart = require('../models/cart');
 
 var Redis = require('../models/redis');
 var Order = require('../models/orders');
-var redisClient = Redis.redisClient
-var hgetallAsync = Redis.hgetallAsync
-var sortAsync = Redis.sortAsync
-var smembersAsync = Redis.smembersAsync
+//var redisClient = Redis.redisClient
+//var hgetallAsync = Redis.hgetallAsync
+//var sortAsync = Redis.sortAsync
+//var smembersAsync = Redis.smembersAsync
 
 var csrfProtection = csrf();
 router.use(csrfProtection);

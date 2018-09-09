@@ -43,7 +43,7 @@ async function  getProducts() {
      let products = await mul.execAsync()
 
      products.forEach(function (product){
-        console.log(product)
+        //console.log(product)
         let productObj = {}
         productObj._id = product[0]
         productObj.imagePath = product[1]

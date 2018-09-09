@@ -1,0 +1,27 @@
+const axios = require('axios')
+
+const getBreeds = async () => {
+  try {
+    return await axios.get('https://dog.ceo/api/breeds/list/all')
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+const countBreeds = async () => {
+  const breeds = await getBreeds()
+
+  if (breeds.data.message) {
+    console.log(`Got ${Object.entries(breeds.data.message).length} breeds`)
+  }
+}
+
+//countBreeds()
+
+
+var instance = axios.create({
+  baseURL: 'http://10.0.16.10:3000/getOrders?user=reza@redislabs.com',
+  timeout: 1000,
+  headers: {'X-Custom-Header': 'foobar'}
+});
+
