@@ -2,7 +2,7 @@ var Redis = require('../models/redis');
 var chunk = require('chunk');
 var redisClient = Redis.redisClient
 
-async function  getOrdersSort() {
+async function  getProductsSort() {
     let productView = []
     let products = await redisClient.sortAsync("redisshop:all-products",
                  "BY",  "redisshop:product:*->price",
@@ -25,10 +25,11 @@ async function  getOrdersSort() {
         productView.push(product)
     });
 
-    console.log(productView)
+    //console.log(productView)
+    return productView;
 }
 
-async function  getOrders() {
+async function  getProducts() {
    // with multi exec 
      let productsIdx= await redisClient.zrevrangeAsync('redisshop:all-productsSorted',0,10);
      let mul = redisClient.multi();
@@ -56,5 +57,5 @@ async function  getOrders() {
      return productView;
 }
 
-module.exports.getOrders = getOrders
-module.exports.getOrdersSort = getOrdersSort
+module.exports.getProducts = getProducts
+module.exports.getProductsSort = getProductsSort
