@@ -25,7 +25,6 @@ redisClient.smembers('redisshop:all-products', function(err, products) {
         process.exit()
     });
 });
-*/
      
 redisClient.zrevrange('redisshop:all-productsSorted',0,10, function(err, products) {
     var mul = redisClient.multi();
@@ -40,4 +39,16 @@ redisClient.zrevrange('redisshop:all-productsSorted',0,10, function(err, product
     });
 });
 
+*/
 
+redisClient.smembers('all-orders:'+'reza@redislabs.com', function(err, orders) {   
+   var mul = redisClient.multi();
+   orders.forEach(function(order) { 
+       mul.hmget('orders:reza@redislabs.com:'+order,'totalQty','totalPrice');
+   });
+
+   mul.exec(function(err,allResponses) {  allResponses.forEach(function (resp){
+        console.log(resp)}) 
+   });
+   
+});

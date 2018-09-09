@@ -6,26 +6,23 @@ const getAsync = promisify(redisClient.get).bind(redisClient);
 const hgetallAsync = promisify(redisClient.hgetall).bind(redisClient);
 const smembersAsync = promisify(redisClient.smembers).bind(redisClient);
 
-
 var rk          = require('rk'), 
     keyRoot     = 'redishop', 
     product       = rk(keyRoot,'product','*');
                
-redisClient.hgetall("redisshop:product:vans",function (err, reply){
-                      console.log(reply.imagePath)
-                    }); 
+//redisClient.hgetall("redisshop:product:vans",function (err, reply){
+//                      console.log(reply.imagePath)
+//                    }); 
 
 //--------------
 
 var user="reza@redislabs.com"
-var orders = []
-var ordersView = []
+let orders = []
 
-var carts = []
-var cartsView = []
-
-smembersAsync('all-orders:'+user).then(function (result) { orders=result });
-
+smembersAsync('all-orders:'+user).
+        then(function (result) {  orders = result }).
+        then(function () { console.log(user + orders) });
+/*
 orders.forEach(function(order){ 
    hgetallAsync('orders:'+user+':'+order).then(function (result) { ordersView.push(result) });
    smembersAsync('all-carts:'+user+':'+order).then(function (result) { carts=result });
@@ -33,7 +30,6 @@ orders.forEach(function(order){
       hgetallAsync('carts:'+user+':'+order+':'+cart).then(function (result) { cartsView.push(result) });
    })
 })
-
 
 
 //---------------
@@ -69,8 +65,6 @@ redisClient.sort("redisshop:all-products",
 
 /*
 redisClient.multi().sort(rk(keyRoot,'all-products'), 
-                    'BY', product+'->price',
-                    'GET', '#', 
                     'GET', product+'->price',   
                     'GET', product+'->imagePath'
                )

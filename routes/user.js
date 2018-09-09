@@ -1,28 +1,27 @@
 var express = require('express');
 var router = express.Router();
 var csrf = require('csurf');
+var HashMap = require('hashmap');
 var passport = require('passport');
+var Cart = require('../models/cart');
 
+var Redis = require('../models/redis');
+var Order = require('../models/orders');
+var redisClient = Redis.redisClient
+var hgetallAsync = Redis.hgetallAsync
+var sortAsync = Redis.sortAsync
+var smembersAsync = Redis.smembersAsync
 
 var csrfProtection = csrf();
 router.use(csrfProtection);
 
-router.get('/profile', isLoggedIn, function (req, res, next) {
-/*
-    Order.find({user: req.user}, function(err, orders) {
-        if(err) {
-            return res.write('Error!');
-        }
-        var cart;
-        orders.forEach(function (order) {
-            cart = new Cart(order.cart);
-            order.items = cart.generateArray();
-        });
-*/
+
+router.get('/profile', isLoggedIn, async (req, res, next) => {
+
         var cart = {}
-        orders = {}
+        orders = await Order.getOrders()
+        console.log(orders)
         res.render('user/profile', { orders: orders });
- //   });
 });
 
 router.get('/logout', isLoggedIn, function (req, res, next) {

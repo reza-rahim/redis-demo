@@ -4,6 +4,7 @@ var router = express.Router();
 var chunk = require('chunk');
 var Redis = require('../models/redis');
 var Cart = require('../models/cart');
+var moment = require('moment');
 var redisClient = Redis.redisClient
 var hgetallAsync = Redis.hgetallAsync
 var sortAsync = Redis.sortAsync
@@ -11,7 +12,35 @@ var sortAsync = Redis.sortAsync
 /* From the redis data base -- */
 router.get('/', function(req, res, next) {
      var successMgs = req.flash('success')[0];
-     console.log(req.session)
+     //console.log(req.session)
+ 
+     // with multi exec 
+     redisClient.zrevrange('redisshop:all-productsSorted',0,10, function(err, products) {
+        var mul = redisClient.multi();
+        products.forEach(function(product) {
+           mul.hmget('redisshop:product:'+product,'id','imagePath','title','description','price');
+        });
+
+        mul.exec(function(err,allResponses) {  
+           var products = []
+           allResponses.forEach(function (itemData){
+              var product = {}
+              product._id = itemData[0]
+              product.imagePath = itemData[1]
+              product.title = itemData[2]
+              product.description = itemData[3]
+              product.price = itemData[4]
+              products.push(product)
+           })
+           var productChunks = [];
+           var chunkSize = 3;
+           for (var i = 0; i < products.length; i += chunkSize) {
+                productChunks.push(products.slice(i, i  + chunkSize));
+           }
+           res.render('shop/index', { title: 'Shopping cart', products: productChunks, successMgs: successMgs, noMessage: !successMgs });
+        });
+      });
+/* with sort command
      sortAsync("redisshop:all-products",
                  "BY",  "redisshop:product:*->price",
                  "get", "#",
@@ -41,12 +70,12 @@ router.get('/', function(req, res, next) {
                       res.render('shop/index', { title: 'Shopping cart', products: productChunks, successMgs: successMgs, noMessage: !successMgs });
 
                     });
+*/
 });
 
 router.get('/add-to-cart/:id', function (req, res) {
     var productId = req.params.id;
     var cart = new Cart(req.session.cart ? req.session.cart : {});
-
 
     redisClient.hgetall("redisshop:product:"+productId,function (err, product){
 
@@ -54,22 +83,10 @@ router.get('/add-to-cart/:id', function (req, res) {
             return res.redirect('/');
        }
        cart.add(product, product.id);
-console.log("  ")
        req.session.cart = cart;
        res.redirect('/');
     });
 
-/*
-    Product.findById(productId, function (err, product) {
-        if(err) {
-            return res.redirect('/');
-        }
-        cart.add(product, product.id);
-        req.session.cart = cart;
-        console.log(req.session.cart);
-        res.redirect('/');
-    })
-*/
 });
 
 router.get('/reduce/:id', function (req, res, next) {
@@ -93,6 +110,8 @@ router.get('/shopping-cart', function (req, res, next) {
         return res.render('shop/shopping-cart', {products: null});
     }
     var cart = new Cart(req.session.cart);
+    console.log(req.session.cart)
+    console.log(cart.generateArray())
     return res.render('shop/shopping-cart', {products: cart.generateArray(), totalPrice: cart.totalPrice});
 });
 
@@ -109,32 +128,37 @@ router.post('/checkout', isLoggedIn, function(req, res, next) {
     if(!req.session.cart) {
         return res.redirect('/shopping-cart');
     }
-    var cart = new Cart(req.session.cart);
 
+    cartSess = new Cart(req.session.cart);
+    cartArr = cartSess.generateArray();
+    var orderNumber = moment().unix()
 
-    stripe.charges.create({
-        amount: cart.totalPrice * 100,
-        currency: "usd",
-        source: req.body.stripeToken, // obtained with Stripe.js
-        description: "Test Charge"
-    }, function(err, charge) {
-        if(err) {
-            req.flash('error', err.message);
-            return res.redirect('/checkout');
-        }
-        var order = new Order({
-            user: req.user,
-            cart: cart,
-            address: req.body.address,
-            name: req.body.name,
-            paymentId: charge.id
-        });
-        order.save(function(err, result) {
-            req.flash('success', 'Successfully bought product!');
-            req.session.cart = null;
-            res.redirect('/');
-        });
+    var mul =redisClient.multi()
+
+    mul.hmset("orders:"+req.user.email+':'+orderNumber, 
+                      "user",req.user.email,"orderNumber", orderNumber, 
+                      "name", req.body.name, "address", req.body.address, 
+                      "totalQty", cartSess.totalQty, "totalPrice", cartSess.totalPrice )
+
+    mul.sadd("all-orders:"+req.user.email,req.user.email+":"+orderNumber)
+
+    cartArr.forEach(function(cart){
+      
+         mul.hmset("carts:"+req.user.email+':'+orderNumber+":"+cart.item.id, 
+                           "user",req.user.email,"orderNumber", orderNumber, "cart", cart.item.id,
+                           "id", cart.item.id,"title", cart.item.title, 
+                           "qty",cart.qty, "price", cart.price )
+         mul.sadd("all-carts:"+req.user.email+":"+orderNumber, req.user.email+":"+orderNumber+":"+cart.item.id )
+
+    })
+
+    mul.exec(function (err, replies) {
     });
+
+    //var cart = new Cart(req.session.cart);
+    req.flash('success', 'Successfully bought product!');
+    req.session.cart = null;
+    res.redirect('/');
 });
 
 module.exports = router;

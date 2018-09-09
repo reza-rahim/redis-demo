@@ -7,9 +7,9 @@
         {{#each orders}}
             <ul class="list-group">
                 {{#each this.items}}
-                    <li class="list-group-item border">{{ this.item.title }} ({{ this.qty }}) - {{ this.price }}$</li>
+                    <li class="list-group-item border">{{ this.title }} ({{ this.qty }}) - {{ this.price }}$</li>
                 {{/each}}
-                <li class="list-group-item list-group-item-success">Total price: ${{ this.cart.totalPrice }}</li>
+                <li class="list-group-item list-group-item-success">Total price: ${{ this.totalPrice }}</li>
             </ul>
         {{/each}}
     </div>
