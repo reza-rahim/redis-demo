@@ -36,7 +36,7 @@ async function  getProducts() {
      let productView = []
 
      productsIdx.forEach(function(product) {
-        console.log(product)
+        //console.log(product)
         mul.hmget('redisshop:product:'+product,'id','imagePath','title','description','price');
      });
 

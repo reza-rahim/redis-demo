@@ -1,6 +1,32 @@
 var Redis = require('../models/redis');
 var HashMap = require('hashmap');
 
+function createOrders(orderPayLoad) {
+    let redisClient = Redis.redisClient
+    var mul =redisClient.multi()
+
+    mul.hmset("orders:"+orderPayLoad.email+':'+orderPayLoad.orderNumber,
+                      "user",orderPayLoad.email,"orderNumber", orderPayLoad.orderNumber,
+                      "name", orderPayLoad.name, "address", orderPayLoad.totalQty,
+                      "totalQty", orderPayLoad.totalQty , "totalPrice", orderPayLoad.totalPrice )
+
+    mul.sadd("all-orders:"+orderPayLoad.email,orderPayLoad.email+":"+orderPayLoad.orderNumber)
+
+    orderPayLoad.cartArr.forEach(function(cart){
+        mul.hmset("carts:"+orderPayLoad.email+':'+orderPayLoad.orderNumber+":"+cart.item.id,
+                           "user",orderPayLoad.email,"orderNumber", orderPayLoad.orderNumber, "cart", cart.item.id,
+                           "id", cart.item.id,"title", cart.item.title,
+                           "qty",cart.qty, "price", cart.price )
+        mul.sadd("all-carts:"+orderPayLoad.email+":"+orderPayLoad.orderNumber, orderPayLoad.email+":"+
+                    orderPayLoad.orderNumber+":"+cart.item.id )
+
+    })
+
+    mul.exec(function (err, replies) {
+    });
+
+}
+
 async function getOrders(user) {
   let redisClient = Redis.redisClient
 
@@ -65,3 +91,4 @@ async function getOrders(user) {
 }
 
 module.exports.getOrders =  getOrders
+module.exports.createOrders =  createOrders

@@ -8,6 +8,7 @@ var Cart = require ('../models/cart');
 var moment = require('moment');
 var redisClient = Redis.redisClient
 var Product = require('../models/product');
+var Order = require('../models/orders');
 
 /* From the redis data base -- */
 //router.get('/', function(req, res, next) {
@@ -87,30 +88,20 @@ router.post('/checkout', isLoggedIn, function(req, res, next) {
 
     cartSess = new Cart(req.session.cart);
     cartArr = cartSess.generateArray();
+
     var orderNumber = moment().unix()
 
-    var mul =redisClient.multi()
+    let orderPayLoad = {}
 
-    mul.hmset("orders:"+req.user.email+':'+orderNumber, 
-                      "user",req.user.email,"orderNumber", orderNumber, 
-                      "name", req.body.name, "address", req.body.address, 
-                      "totalQty", cartSess.totalQty, "totalPrice", cartSess.totalPrice )
-
-    mul.sadd("all-orders:"+req.user.email,req.user.email+":"+orderNumber)
-
-    cartArr.forEach(function(cart){
-      
-         mul.hmset("carts:"+req.user.email+':'+orderNumber+":"+cart.item.id, 
-                           "user",req.user.email,"orderNumber", orderNumber, "cart", cart.item.id,
-                           "id", cart.item.id,"title", cart.item.title, 
-                           "qty",cart.qty, "price", cart.price )
-         mul.sadd("all-carts:"+req.user.email+":"+orderNumber, req.user.email+":"+orderNumber+":"+cart.item.id )
-
-    })
-
-    mul.exec(function (err, replies) {
-    });
-
+    orderPayLoad.email = req.user.email;
+    orderPayLoad.orderNumber=orderNumber;
+    orderPayLoad.name=req.body.name;
+    orderPayLoad.address=req.body.address;
+    orderPayLoad.totalQty=cartSess.totalQty;
+    orderPayLoad.totalPrice=cartSess.totalPrice;
+    orderPayLoad.cartArr=cartArr;
+    
+    Order.createOrders(orderPayLoad)
     //var cart = new Cart(req.session.cart);
     req.flash('success', 'Successfully bought product!');
     req.session.cart = null;
