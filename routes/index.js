@@ -14,7 +14,12 @@ var Product = require('../models/product');
 router.get('/', async (req, res, next) => {
     var successMgs = req.flash('success')[0];
      
+    // ---
     products = await Product.getProducts()
+
+    // With sort routine
+    //products = await Product.getProductsSort()
+
     var productChunks = [];
     var chunkSize = 3;
     for (var i = 0; i < products.length; i += chunkSize) {
@@ -22,68 +27,6 @@ router.get('/', async (req, res, next) => {
     }
     res.render('shop/index', { title: 'Shopping cart', products: productChunks, successMgs: successMgs, noMessage: !successMgs });
     
-/*---------------
-     // with multi exec 
-     redisClient.zrevrange('redisshop:all-productsSorted',0,10, function(err, products) {
-        var mul = redisClient.multi();
-        products.forEach(function(product) {
-           mul.hmget('redisshop:product:'+product,'id','imagePath','title','description','price');
-        });
-
-        mul.exec(function(err,allResponses) {  
-           var products = []
-           allResponses.forEach(function (itemData){
-              var product = {}
-              product._id = itemData[0]
-              product.imagePath = itemData[1]
-              product.title = itemData[2]
-              product.description = itemData[3]
-              product.price = itemData[4]
-              products.push(product)
-           })
-
-           var productChunks = [];
-           var chunkSize = 3;
-           for (var i = 0; i < products.length; i += chunkSize) {
-                productChunks.push(products.slice(i, i  + chunkSize));
-           }
-           res.render('shop/index', { title: 'Shopping cart', products: productChunks, successMgs: successMgs, noMessage: !successMgs });
-        });
-     });
-------------- */
-
-/* ---------------
-     //with sort command
-     sortAsync("redisshop:all-products",
-                 "BY",  "redisshop:product:*->price",
-                 "get", "#",
-                 "get",  "redisshop:product:*->imagePath",
-                 "get",  "redisshop:product:*->title",
-                 "get",  "redisshop:product:*->description",
-                 "get",  "redisshop:product:*->price").then (function (reply){
-                      var prodsChunks = chunk(reply,5)
-                      var products = []
-                      prodsChunks.forEach(function(itemData,index) {
-                             var product = {}
-                             product._id = itemData[0]
-                             product.imagePath = itemData[1]
-                             product.title = itemData[2]
-                             product.description = itemData[3]
-                             product.price = itemData[4]
-
-                             products[index] = product
-                             //console.log(product)
-                      });
-
-                      var productChunks = [];
-                      var chunkSize = 3;
-                      for (var i = 0; i < products.length; i += chunkSize) {
-                         productChunks.push(products.slice(i, i  + chunkSize));
-                      }
-                      res.render('shop/index', { title: 'Shopping cart', products: productChunks, successMgs: successMgs, noMessage: !successMgs });
-
-                    });
----------------- */
 });
 
 router.get('/add-to-cart/:id', function (req, res) {
