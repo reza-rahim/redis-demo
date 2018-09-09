@@ -19,8 +19,8 @@ router.use(csrfProtection);
 router.get('/profile', isLoggedIn, async (req, res, next) => {
 
         var cart = {}
-        orders = await Order.getOrders()
-        console.log(orders)
+        orders = await Order.getOrders(req.user.email)
+        //console.log(orders)
         res.render('user/profile', { orders: orders });
 });
 

@@ -3,17 +3,15 @@ var router = express.Router();
 
 var chunk = require('chunk');
 var Redis = require('../models/redis');
-var Cart = require('../models/cart');
+var Products = require('../models/product');
 var moment = require('moment');
 var redisClient = Redis.redisClient
-var hgetallAsync = Redis.hgetallAsync
-var sortAsync = Redis.sortAsync
 
 /* From the redis data base -- */
 router.get('/', function(req, res, next) {
-     var successMgs = req.flash('success')[0];
-     //console.log(req.session)
- 
+    var successMgs = req.flash('success')[0];
+     
+/*---------------*/
      // with multi exec 
      redisClient.zrevrange('redisshop:all-productsSorted',0,10, function(err, products) {
         var mul = redisClient.multi();
@@ -32,6 +30,7 @@ router.get('/', function(req, res, next) {
               product.price = itemData[4]
               products.push(product)
            })
+
            var productChunks = [];
            var chunkSize = 3;
            for (var i = 0; i < products.length; i += chunkSize) {
@@ -39,8 +38,11 @@ router.get('/', function(req, res, next) {
            }
            res.render('shop/index', { title: 'Shopping cart', products: productChunks, successMgs: successMgs, noMessage: !successMgs });
         });
-      });
-/* with sort command
+     });
+/*------------- */
+
+/* ---------------
+     //with sort command
      sortAsync("redisshop:all-products",
                  "BY",  "redisshop:product:*->price",
                  "get", "#",
@@ -70,7 +72,7 @@ router.get('/', function(req, res, next) {
                       res.render('shop/index', { title: 'Shopping cart', products: productChunks, successMgs: successMgs, noMessage: !successMgs });
 
                     });
-*/
+---------------- */
 });
 
 router.get('/add-to-cart/:id', function (req, res) {
@@ -110,8 +112,8 @@ router.get('/shopping-cart', function (req, res, next) {
         return res.render('shop/shopping-cart', {products: null});
     }
     var cart = new Cart(req.session.cart);
-    console.log(req.session.cart)
-    console.log(cart.generateArray())
+    //console.log(req.session.cart)
+    //console.log(cart.generateArray())
     return res.render('shop/shopping-cart', {products: cart.generateArray(), totalPrice: cart.totalPrice});
 });
 

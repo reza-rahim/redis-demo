@@ -1,20 +1,18 @@
 var Redis = require('../models/redis');
 var HashMap = require('hashmap');
 
-async function getOrders() {
-  var redisClient = Redis.redisClient
+async function getOrders(user) {
+  let redisClient = Redis.redisClient
 
-  var user="reza@redislabs.com"
-  //let orders = []
   let orderView = []
 
-  var  ordersHash = new HashMap();
+  let  ordersHash = new HashMap();
   let ordersRedis = await redisClient.smembersAsync('all-orders:'+user);
 
   //console.log('ordersRedis', ordersRedis.toString());
 
-  var mulOrder = redisClient.multi();
-  var mulCarts = redisClient.multi();
+  let mulOrder = redisClient.multi();
+  let mulCarts = redisClient.multi();
 
   ordersRedis.forEach(function(order) {
      mulOrder.hmget('orders:'+order, 'user', 'orderNumber', 'totalQty','totalPrice')
@@ -32,20 +30,14 @@ async function getOrders() {
      orderObj.totalPrice =order[3]
      ordersHash.set(orderObj.orderNumber, orderObj)
   })
-  //console.log('ordersRedis', allorders );
 
   let cartsRedis = await mulCarts.execAsync()
-  //console.log('cartsRedis', cartsRedis);
 
-  var mulCartsDetail = redisClient.multi();
+  let mulCartsDetail = redisClient.multi();
 
-    //console.log('cartsRedis', cartsRedis);
-
-  var mulCartsDetail = redisClient.multi();
   cartsRedis.forEach(function(carts) {
     carts.forEach(function(cart) {
        mulCartsDetail.hmget('carts:'+cart, 'user', 'orderNumber', 'cart','id', 'title', 'qty', 'price')
-       //console.log('carts:'+cart)
     })
   })
 
@@ -53,7 +45,7 @@ async function getOrders() {
   //console.log('carts:', allcarts);
 
   allcarts.forEach(function(cart){
-     var cartObj = {}
+     let cartObj = {}
      cartObj.user=cart[0]
      cartObj.orderNumber=cart[1]
      cartObj.cart=cart[2]
@@ -68,7 +60,7 @@ async function getOrders() {
     orderView.push(value)
   });
 
-  console.log(orderView)
+  //console.log(orderView)
   return orderView
 }
 
